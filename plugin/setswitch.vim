@@ -101,6 +101,10 @@ augroup setswitch
     " Insert mode is managed independently.
     autocmd InsertEnter * call <SID>TurnOff(g:setswitch_insert)
     autocmd InsertLeave * call <SID>WindowEnter(s:setswitch_insert, s:Fnameescape(fnamemodify(expand('%'), ':p')))
+
+    " Command-line mode is managed independently.
+    autocmd CmdlineEnter * call <SID>TurnOff(g:setswitch_command) | redraw
+    autocmd CmdlineLeave * call <SID>WindowEnter(s:setswitch_command, s:Fnameescape(fnamemodify(expand('%'), ':p')))
 augroup END
 
 function! s:Store(dictionary, file, key, value)
