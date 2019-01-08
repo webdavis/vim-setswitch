@@ -20,15 +20,14 @@ TABLE-OF-CONTENTS				 *setswitch-table-of-contents*
 ==============================================================================
 OVERVIEW                                                  *setswitch-overview*
 
-        I won't lie to you, setswitch is probably the most useful plugin I've
-        created. I literally wouldn't want to use Vim without it. Here's why:
+	setswitch is probably the most useful plugin I've created. I wouldn't
+	want to use Vim without it. Here's why:
 
-        - setswitch makes all settings buffer local. That means even settings
-          like |hlsearch| are buffer local with setswitch.
-        - setswitch can enable settings for the active window, while disabling
-          settings for the other windows.
-        - setswitch is only limited to your imagination. It works with any
-          setting. Seriously, don't take my word for it. Just try it.
+	- setswitch allows you to run settings upon entering a window, and
+	  turn them off when you leave the window. That means even settings
+	  like `hlsearch` can be window local with setswitch.
+	- setswitch is only limited to your imagination. It works with _any
+	  setting_.
 
 ==============================================================================
 INSTALLATION                                          *setswitch-installation*
@@ -51,12 +50,12 @@ INSTALLATION                                          *setswitch-installation*
 ==============================================================================
 CONFIGURATION                                        *setswitch-configuration*
 
-	setswitch is user extensible, meaning that the following settings should take any
-	option available in Vim/Neovim.
+	setswitch is user extensible, meaning that the following settings
+	should take any option available in Vim/Neovim.
 
 GLOBAL DICTIONARIES ~
 
-g:setswitch = { filetype: ['option',...], }                      *g:setswitch*
+g:setswitch = { filetype: ['option=value',...], }                *g:setswitch*
 
 	Put this in your `~/.vimrc`, to set options when the cursor enters
 	certain filetypes. You're probably wondering why this is needed when
@@ -64,7 +63,7 @@ g:setswitch = { filetype: ['option',...], }                      *g:setswitch*
 	toggles the settings you put in it off when leaving the window, and
 	then back on when entering.
 
-	Setswitch will run |set| on whatever {option=values} you put in
+	Setswitch will run |set| on whatever {option=value} you put in
 	`g:setswitch` if the filetype entry exists. If the filetype doesn't
 	have an entry then the options in the {'all'} entry are |set|.
  >
