@@ -88,6 +88,8 @@ let g:setswitch = get(g:, 'setswitch', {})
 
 let s:setswitch_insert = get(s:, 'setswitch_insert', {})
 
+let s:setswitch_command = get(s:, 'setswitch_command', {})
+
 let s:setswitch_dict = get(s:, 'setswitch_dict', {})
 
 augroup setswitch
