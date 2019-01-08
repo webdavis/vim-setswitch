@@ -22,6 +22,60 @@ let s:save_cpoptions = &g:cpoptions
 set cpoptions&vim
 let g:loaded_setswitch = 1
 
+function! s:WindowEnter(dictionary, file)
+    if has_key(eval('a:dictionary'), a:file)
+        for l:option in items(get(eval('a:dictionary'), a:file))
+
+            " Note: the single quotes around %s are important.
+            if type(l:option[1]) ==? type(v:t_number)
+                execute printf("let &l:%s = %s", l:option[0], l:option[1])
+            else
+                execute printf("let &l:%s = '%s'", l:option[0], l:option[1])
+            endif
+        endfor
+    else
+        if !has_key(g:setswitch, &filetype)
+            if has_key(g:setswitch, 'all')
+                for l:option in g:setswitch['all']
+                    execute printf('set %s', l:option)
+                endfor
+            endif
+        else
+            for l:option in g:setswitch[&filetype]
+                execute printf('set %s', l:option)
+            endfor
+        endif
+    endif
+endfunction
+
+function! s:TurnOff(dictionary)
+    if !has_key(a:dictionary, &filetype)
+        if has_key(a:dictionary, 'all')
+            for l:option in a:dictionary['all']
+                let l:name = substitute(substitute(l:option, '=.*', '', ''), 'no', '', '')
+                let l:value = eval('&l:' . substitute(l:name, '+\|-', '', ''))
+
+                if type(l:value) ==? type(v:t_number)
+                    execute printf("let &l:%s = 0", l:name)
+                else
+                    execute printf("let &l:%s = ''", l:name)
+                endif
+            endfor
+        endif
+    else
+        for l:option in a:dictionary[&filetype]
+            let l:name = substitute(substitute(l:option, '=.*', '', ''), 'no', '', '')
+            let l:value = eval('&l:' . substitute(l:name, '+\|-', '', ''))
+
+            if type(l:value) ==? type(v:t_number)
+                execute printf("let &l:%s = 0", l:name)
+            else
+                execute printf("let &l:%s = ''", l:name)
+            endif
+        endfor
+    endif
+endfunction
+
 function! s:Fnameescape(file)
     if exists('*fnameescape')
         return fnameescape(a:file)
@@ -30,90 +84,36 @@ function! s:Fnameescape(file)
     endif
 endfunction
 
-let g:setswitch_exclude = get(g:, 'setswitch_exclude', {})
+let g:setswitch = get(g:, 'setswitch', {})
 
-function! s:Cache(dictionary, file, key, value)
+let s:setswitch_insert = get(s:, 'setswitch_insert', {})
+
+let s:setswitch_command = get(s:, 'setswitch_command', {})
+
+let s:setswitch_dict = get(s:, 'setswitch_dict', {})
+
+augroup setswitch
+    autocmd!
+    autocmd FileType man,netrw,help call <SID>WindowEnter(s:setswitch_dict, s:Fnameescape(fnamemodify(expand('%'), ':p')))
+    autocmd FocusGained,WinEnter * call <SID>WindowEnter(s:setswitch_dict, s:Fnameescape(fnamemodify(expand('%'), ':p')))
+    autocmd FocusLost,WinLeave * call <SID>TurnOff(g:setswitch)
+
+    " Insert mode is managed independently.
+    autocmd InsertEnter * call <SID>TurnOff(g:setswitch_insert)
+    autocmd InsertLeave * call <SID>WindowEnter(s:setswitch_insert, s:Fnameescape(fnamemodify(expand('%'), ':p')))
+augroup END
+
+function! s:Store(dictionary, file, key, value)
     call extend(eval('a:dictionary'), eval('{a:file: {},}'), 'keep')
     call extend(eval('a:dictionary[a:file]'), eval('{a:key: a:value}'), 'force')
 endfunction
 
-function! s:WindowEnter(dictionary, file)
-        if has_key(eval('a:dictionary'), a:file)
-            for l:option in items(get(eval('a:dictionary'), a:file))
-
-                " Note: the single quotes around %s are important.
-                if type(l:option[1]) ==? type(v:t_number)
-                    execute printf("let &l:%s = %s", l:option[0], l:option[1])
-                else
-                    execute printf("let &l:%s = '%s'", l:option[0], l:option[1])
-                endif
-            endfor
-        elseif has_key(g:setswitch_exclude, &filetype)
-            for l:option in g:setswitch_exclude[&filetype]
-                execute printf('set %s', l:option)
-            endfor
-        endif
-endfunction
-
-let s:setswitch = get(s:, 'setswitch', {})
-
-function! s:CursorLeave()
-    for l:option in get(g:, 'setswitch_toggle', [])
-        " Without this, multi-valued options like colorcolumn won't be able to be reset to multiple values.
-        call s:Cache(s:setswitch, s:Fnameescape(fnamemodify(expand("%"), ":p")), l:option, eval('&l:' . l:option))
-        execute printf("let &l:%s = 0", l:option)
-    endfor
-endfunction
-
-let s:setswitch_insert = get(s:, 'setswitch_insert', {})
-
-" Options added to g:setswitch_insert_toggle will be switched off.
-function! s:InsertEnter()
-    for l:option in get(g:, 'setswitch_insert_toggle', [])
-        call s:Cache(s:setswitch_insert, s:Fnameescape(fnamemodify(expand("%"), ":p")), l:option, eval('&l:' . l:option))
-
-        if type(eval('&l:' . l:option)) ==? type(v:t_number)
-            execute printf("let &l:%s = 0", l:option)
-        else
-            execute printf("let &l:%s = ''", l:option)
-        endif
-    endfor
-endfunction
-
-let s:setswitch_command = get(s:, 'setswitch_command', {})
-
-" Options added to g:setswitch_command_toggle will be switched off.
-function! s:CmdlineEnter()
-    for l:option in get(g:, 'setswitch_command_toggle', [])
-        call s:Cache(s:setswitch_command, s:Fnameescape(fnamemodify(expand("%"), ":p")), l:option, eval('&l:' . l:option))
-
-        if type(eval('&l:' . l:option)) ==? type(v:t_number)
-            execute printf("let &l:%s = 0", l:option)
-        else
-            execute printf("let &l:%s = ''", l:option)
-        endif
-        execute 'redraw'
-    endfor
-endfunction
-
-augroup setswitch
+augroup setswitch_hooks
     autocmd!
-    autocmd FileType man,netrw,help call <SID>WindowEnter(s:setswitch, s:Fnameescape(fnamemodify(expand('%'), ':p')))
-    autocmd FocusGained,WinEnter * call <SID>WindowEnter(s:setswitch, s:Fnameescape(fnamemodify(expand('%'), ':p')))
-    autocmd FocusLost,WinLeave * call <SID>CursorLeave()
-
-    " Insert mode is managed independently.
-    autocmd InsertEnter * call <SID>InsertEnter()
-    autocmd InsertLeave * call <SID>WindowEnter(s:setswitch_insert, s:Fnameescape(fnamemodify(expand('%'), ':p')))
-
-    " Command-line mode is managed independently.
-    autocmd CmdlineEnter * call <SID>CmdlineEnter()
-    autocmd CmdlineLeave * call <SID>WindowEnter(s:setswitch_command, s:Fnameescape(fnamemodify(expand('%'), ':p')))
-
     " Listens for the options in g:setswitch_hooks being explicitly set and caches their
     " values in a dictionary.
     execute 'autocmd OptionSet ' . join(get(g:, 'setswitch_hooks', []), ',')
-        \ . ' :call <SID>Cache(s:setswitch, s:Fnameescape(fnamemodify(expand("%"), ":p")), expand("<amatch>"), eval("v:option_new"))'
+            \ . ' :call <SID>Store(s:setswitch_dict, s:Fnameescape(fnamemodify(expand("%"), ":p")), expand("<amatch>"), eval("v:option_new"))'
 augroup END
 
 let &cpoptions = s:save_cpoptions

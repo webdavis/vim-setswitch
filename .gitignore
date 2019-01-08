@@ -9,15 +9,5 @@
 test.log
 messages
 
-# Ignore the vimrc files for the guest VM: it only needs to be committed for major
-# changes. To commit it run the following command:
-#
-#	git add --force flag (force recommitting it)
-#
-# Then to stop tracking the file, run (this will not delete the file from your local
-# system):
-#
-#	git rm --cached **/vimrc
-#
-vimrc
+# Ignore a .vimrc file created by test script.
 .vimrc

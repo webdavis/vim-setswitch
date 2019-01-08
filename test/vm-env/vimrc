@@ -1,0 +1,84 @@
+if !has('nvim')
+    set nocompatible
+endif
+
+" Set some defaults.
+set runtimepath^=~/.vim
+set runtimepath+=~/.vim/after
+let &packpath = &runtimepath
+set number relativenumber
+set cursorline cursorcolumn
+set diffopt+=vertical
+set colorcolumn=+1
+set textwidth=90
+set viminfo+=!
+set sessionoptions+=globals
+filetype plugin indent on
+
+" View man pages using :Man command.
+runtime! ftplugin/man.vim
+
+" Begin plugins.
+call plug#begin('~/.vim/plugged')
+
+" Install a super statusline and colorscheme.
+Plug 'itchyny/lightline.vim' | Plug 'webdavis/vim-denver'
+
+" Provides Git editing tools for Vim.
+Plug 'tpope/vim-fugitive'
+
+call plug#end()
+
+" If lightline.vim is installed and synced then do not show the mode (NORMAL, INSERT, et
+" cetera) at bottom of editor window.
+if isdirectory(finddir('lightline.vim', expand('~/.vim') . '/**')) && get(g:, 'denver_sync_lightline', 0)
+    set noshowmode
+endif
+
+" If TRUECOLOR is available then enable it.
+if has("termguicolors") | let &g:termguicolors = 1 | endif
+
+" Set the colorscheme.
+colorscheme denverdark
+
+" Provides user extensible buffer local capabilites for all Vim options.
+" Enable the mouse.
+if has('mouse')
+    set mouse=ar
+endif
+
+" Toggle these settings upon entering and exiting a window.
+let g:setswitch = {
+        \ 'all': ['colorcolumn=+1', 'cursorline', 'cursorcolumn', 'relativenumber'],
+        \ 'netrw': ['colorcolumn=', 'nocursorline', 'nocursorcolumn'],
+        \ 'man': ['colorcolumn=', 'nocursorline', 'nocursorcolumn'],
+        \ 'help': ['colorcolumn=', 'nocursorline', 'nocursorcolumn'],
+        \ 'gitcommit': ['colorcolumn=+1,51', 'nocursorline', 'nocursorcolumn', 'relativenumber'],
+        \ }
+
+" Toggle these settings upon entering and exiting insert mode.
+let g:setswitch_insert = {
+        \ 'all': ['relativenumber', 'cursorline', 'cursorcolumn'],
+        \ }
+
+" Listen for these options to be set.
+let g:setswitch_hooks = ['cursorline', 'cursorcolumn', 'relativenumber', 'wrap', 'hlsearch', 'colorcolumn']
+
+" Some useful mappings for testing.
+nnoremap <special> <F8> :<C-U>messages clear<CR>
+nnoremap <special> <F9> :<C-U>messages<CR>
+nnoremap <special> <F7> :execute "let a = ' '"<CR>:help<C-R>=a<CR>
+
+" Enable For Testing: uncomment this function and run `tail -f autocommand.log` to see
+" autocmd's caught in real-time.
+" function! s:LogAutocommands(event_name) abort
+"     silent execute '!echo ' . a:event_name . ' >> autocommand.log'
+" endfunction
+
+augroup Test
+    autocmd!
+    " autocmd BufEnter * :echom "BufEnter " . expand('<amatch>') . " bufnr-" . bufnr('%')
+    " autocmd OptionSet hlsearch,filetype :echom "OptionSet " . expand('<amatch>') . " bufnr-" . bufnr('%')
+    " autocmd InsertEnter * :echom "InsertEnter " . expand('<amatch>') . " bufnr-" . bufnr('%')
+    " autocmd InsertLeave * :echom "InsertLeave " . expand('<amatch>') . " bufnr-" . bufnr('%')
+augroup END
