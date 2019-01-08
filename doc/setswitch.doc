@@ -6,19 +6,19 @@ License:    The Unlicense
 URL:        https://github.com/webdavis/vim-setswitch
 
 ==============================================================================
-TABLE-OF-CONTENTS				        *setswitch-table-of-contents*
+TABLE-OF-CONTENTS				 *setswitch-table-of-contents*
 
 1.  Overview             |setswitch-overview|
 2.  Installation         |setswitch-installation|
 4.  Configuration        |setswitch-configuration|
 5.  Vagrant              |setswitch-vagrant|
-6.  Tests		         |setswitch-tests|
+6.  Tests		 |setswitch-tests|
 7.  Contributing         |setswitch-contributing|
-8.  License			     |setswitch-license|
-9.  Author			     |setswitch-author|
+8.  License	         |setswitch-license|
+9.  Author		 |setswitch-author|
 
 ==============================================================================
-OVERVIEW                                *setswitch-overview*
+OVERVIEW                                                  *setswitch-overview*
 
         I won't lie to you, setswitch is probably the most useful plugin I've
         created. I literally wouldn't want to use Vim without it. Here's why:
@@ -31,7 +31,7 @@ OVERVIEW                                *setswitch-overview*
           setting. Seriously, don't take my word for it. Just try it.
 
 ==============================================================================
-INSTALLATION                            *setswitch-installation*
+INSTALLATION                                          *setswitch-installation*
 
         To install 'setswitch' use any one of your favorite plugin managers.
 
@@ -49,22 +49,23 @@ INSTALLATION                            *setswitch-installation*
 <
 
 ==============================================================================
-CONFIGURATION                           *setswitch-configuration*
+CONFIGURATION                                        *setswitch-configuration*
 
-        Setswitch is user extensible, meaning that in the following settings
-        {option} can be replaced with any setting available in Vim/Neovim, and
-        the |Lists| take any option availabe in Vim/Neovim.
+	setswitch is user extensible, meaning that the following settings should take any
+	option available in Vim/Neovim.
 
 GLOBAL-LISTS ~
 
-g:setswitch_toggle                      *setswitch_toggle*
+g:setswitch_toggle                                          *setswitch_toggle*
 
-        g:setswitch_toggle takes a |List| of options as an argument. It turns
-        these options on upon entering a window, and off upon exiting the
-        window.
+g:setswitch_toggle = []
 
-        For example, putting the following in your `~/.vimrc` instructs
-        setswitch to toggle them when entering/exiting the window.
+	g:setswitch_toggle takes a |List| of options as an argument. It turns
+	these options on upon the cursor entering a window, and off upon the
+	cursor exiting the window.
+
+	For example, putting the following in your `~/.vimrc` instructs
+	setswitch to toggle these setting when entering/exiting the window.
  >
         let g:setswitch_toggle = ['cursorline', 'cursorcolumn',
                                 \ 'colorcolumn', 'relativenumber']
@@ -75,69 +76,81 @@ g:setswitch_toggle                      *setswitch_toggle*
                                 \ 'nocolorcolumn', 'relativenumber']
 <
 
-g:setswitch_cmdmode_toggle              *setswitch_cmdmode_toggle*
+g:setswitch_insert_toggle		             *setswitch_insert_toggle*
+
+	Insert mode has it's own controller variable so that you can do unique
+	things with it. `g:setswitch_insert_toggle` takes a |List| of options
+	as an argument and turns these options off upon entering the insert
+	mode, and on upon exiting insert mode.
+
+	The following setting turns |relativenumber|, |cursorline|, and
+	|cursorcolumn| off when entering the insert mode.
+ >
+	let g:setswitch_insert_toggle = ['relativenumber', 'cursorline',
+				       \ 'cursorcolumn']
+<
+
+g:setswitch_command_toggle                          *setswitch_command_toggle*
 
         The command-line has it's own controller variable so that you can do
-        unique things with it. |g:setswitch_cmdmode_toggle| takes a |List| of
+        unique things with it. `g:setswitch_command_toggle` takes a |List| of
         options as an argument and turns these options off upon entering the
         command-line, and on upon exiting the command-line.
 
         The following setting turns |relativenumber| and |hlsearch| off when
         entering the command-line.
  >
-        let g:setswitch_cmdmode_toggle = ['relativenumber', 'hlsearch']
+        let g:setswitch_command_toggle = ['relativenumber', 'hlsearch']
 <
 
-g:setswitch_hooks                       *setswitch_hooks*
+g:setswitch_hooks                                            *setswitch_hooks*
 
         g:setswitch_hooks takes a |List| of options instructing setswitch to
         listen for these options being set using the |OptionSet| autocommand.
         If they are set then setswitch will store the option and value of the
-        option in the dictionary |g:setswitch| by file name.
+        option in the dictionary `s:setswitch` by file name.
 
-        Put this in your `~/.vimrc` to instruct setswitch to store the values of
-        the following options whenever the user sets them. Whenever the cursor
-        enters the window where these are set, setswitch will set these values
-        even if they were globally set in another window. This pairs nicely
-        with Tpope's vim-unimpaired plugin:
+        Put this in your `~/.vimrc` to instruct setswitch to store the values
+        of the following options whenever the user sets them. Whenever the
+        cursor enters the window where these are set, setswitch will set these
+        values even if they were globally set in another window. This pairs
+        nicely with Tpope's vim-unimpaired plugin:
         https://github.com/tpope/vim-unimpaired
  >
         let g:setswitch_hooks = ['cursorline', 'cursorcolumn', 'relativenumber',
                                \ 'wrap', 'hlsearch', 'colorcolumn']
 <
 
-g:setswitch_no{option}_filetypes        *g:setswitch_nooption_filetypes*
+GLOBAL DICTIONARIES ~
 
-        Put this in your `~/.vimrc`, replacing {option} with a Vim option, and
-        set it equal to a list of filetypes to prevent setswitch from setting
-        the named option in those filetypes when the window is focused. This
-        is useful when you have added an option to g:setswitch_toggle that you
-        do not want in certain filetypes.
+g:setswitch_exclude        		                  g:setswitch_exclude*
 
-        For example, put the following in your `~/.vimrc` to prevent these
-        filetypes from setting the options in the list.
+	g:setswitch_exclude is a |Dictionary| of the form:
  >
-        let g:setswitch_nocursorline_filetypes = ['markdown', 'netrw', 'man', 'help']
-        let g:setswitch_nocursorcolumn_filetypes = ['markdown', 'netrw', 'man', 'help']
-        let g:setswitch_nocolorcolumn_filetypes = ['netrw', 'man', 'help']
+	g:setswitch_exclude = {
+		\ filetype: ['option', 'option', 'option'...],
+	\ }
 <
+	Put this in your `~/.vimrc`, to set options when the cursor enters
+	certain filetypes. You're probably wondering why this is needed when
+	the |ftplugin| directory exists. It's to prevent setswitch from
+	activating options when you leave a window of a certain filetype
+	without closing the window and then reenter it later. Unfortunately
+	this is the best we can manage with Vim's present capabilities.
 
-GLOBAL-VARIABLES ~
-
-g:setswitch_{option}                    *g:setswitch_option*
-
-        g:setswitch_{option} sets the default for whatever option you are
-        setting. The is helpful for values that are evaluations of
-        expressions. For example the value of |colorcolumn| is the summation
-        of the expression <textwidth + 1>:
+	Here is a useful example:
  >
-        let g:setswitch_colorcolumn = '&l:textwidth + 1'
+	let g:setswitch_exclude = {
+	    \ { 'netrw': ['nocolorcolumn', 'nocursorline', 'nocursorcolumn'] },
+	    \ { 'man': ['nocolorcolumn', 'nocursorline', 'nocursorcolumn'] },
+	    \ { 'help': ['nocolorcolumn', 'nocursorline', 'nocursorcolumn'] },
+	    \ }
 <
-        Use this when you need the default to be set to something specific,
-        like an |expression| or a |string|.
+	Setswitch will set these options when entering the corresponding
+	filetypes.
 
 ==============================================================================
-VAGRANT                                 *setswitch-vagrant*
+VAGRANT                                                    *setswitch-vagrant*
 
         If you want to try setswitch out before installing it, there is a
         'Vagrantfile' that provisions a guest machine using shell scripts.
@@ -153,12 +166,12 @@ VAGRANT                                 *setswitch-vagrant*
         provisions.
 
 ==============================================================================
-TESTS                                   *setswitch-tests*
+TESTS                                                        *setswitch-tests*
 
 # TODO: a Makefile that executes Vim 8's assertion functions.
 
 ==============================================================================
-CONTRIBUTING                            *setswitch-contributing*
+CONTRIBUTING                                          *setswitch-contributing*
 
         I recommend you open an issue explaining what you would like before
         submitting a patch. There is a good chance I will just take care of it
@@ -169,13 +182,13 @@ CONTRIBUTING                            *setswitch-contributing*
         https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 
 ==============================================================================
-LICENSE                                 *setswitch-license*
+LICENSE                                                    *setswitch-license*
 
         This plugin is distributed under the same terms as Vim.
         See ':help license'
 
 ==============================================================================
-AUTHOR                                  *setswitch-author*
+AUTHOR                                                      *setswitch-author*
 
         This project is maintained by Stephen A. Davis. Stephen's other
         projects can be found at https://github.com/webdavis.

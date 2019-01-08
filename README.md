@@ -1,18 +1,17 @@
 setswitch.vim
 =============
 
-_setswitch.vim: a user extensible plugin that adds buffer local capabilities to all
+_setswitch.vim: a user extensible plugin that adds window local capabilities to all
 options in Vim._
 
 setswitch is probably the most useful plugin I've created. I literally wouldn't want to
 use Vim without it. Here's why:
 
-- setswitch makes all settings buffer local. That means even settings like `hlsearch` are
-  buffer local with setswitch.
+- setswitch makes all settings window local. That means even settings like `hlsearch` are
+  window local with setswitch.
 - setswitch can enable settings for the active window, while disabling settings for the
-  other windows.
-- setswitch is only limited to your imagination. It works with _any setting_. Seriously,
-  don't take my word for it. Just try it.
+  inactive windows.
+- setswitch is only limited to your imagination. It works with _any setting_.
 
 ## Install
 
@@ -33,16 +32,16 @@ Install it in Vim 8.0, like so:
 
 ## Configuration
 
-setswitch is user extensible, meaning that in the following settings `{option}` can be
-replaced with any Vim/Neovim setting, and the **Lists** take any Vim/Neovim option.
+setswitch is user extensible, meaning that the following settings should take any option
+available in Vim/Neovim.
 
 #### g:setswitch_toggle
 
 `g:setswitch_toggle` takes a **List** of options as an argument. It turns these options on
-upon entering a window, and off upon exiting the window.
+upon the cursor entering a window, and off upon the cursor exiting the window.
 
-For example, putting the following in your `~/.vimrc` instructs setswitch to toggle them
-when entering/exiting the window.
+For example, putting the following in your `~/.vimrc` instructs setswitch to toggle these
+setting when entering/exiting the window.
 
 ```vim
 let g:setswitch_toggle = ['cursorline', 'cursorcolumn', 'colorcolumn', 'relativenumber']
@@ -51,64 +50,73 @@ let g:setswitch_toggle = ['cursorline', 'cursorcolumn', 'colorcolumn', 'relative
 let g:setswitch_toggle = ['cursorline', 'nocursorcolumn', 'nocolorcolumn', 'relativenumber']
 ```
 
-#### g:setswitch_cmdmode_toggle
+#### g:setswitch_insert_toggle
+
+Insert mode has it's own controller variable so that you can do unique things with it.
+`g:setswitch_insert_toggle` takes a **List** of options as an argument and turns these
+options off upon entering the insert mode, and on upon exiting insert mode.
+
+The following setting turns `relativenumber`, `cursorline`, and `cursorcolumn` off when
+entering the insert mode.
+
+```vim
+let g:setswitch_insert_toggle = ['relativenumber', 'cursorline', 'cursorcolumn']
+```
+
+#### g:setswitch_command_toggle
 
 The command-line has it's own controller variable so that you can do unique things with
-it. `g:setswitch_cmdmode_toggle` takes a **List** of options as an argument and turns
+it. `g:setswitch_command_toggle` takes a **List** of options as an argument and turns
 these options off upon entering the command-line, and on upon exiting the command-line.
 
 The following setting turns `relativenumber` and `hlsearch` off when entering the
 command-line.
 
 ```vim
-let g:setswitch_cmdmode_toggle = ['relativenumber', 'hlsearch']
+let g:setswitch_command_toggle = ['relativenumber', 'hlsearch']
 ```
 
 #### g:setswitch_hooks
 
-g:setswitch_hooks takes a **List** of options instructing setswitch to listen for these
+`g:setswitch_hooks` takes a **List** of options instructing setswitch to listen for these
 options being set using the `OptionSet` autocommand. If they are set then setswitch will
-store the option and value of the option in the dictionary `g:setswitch` by file name.
+store the option and value of the option in the dictionary `s:setswitch`, by file name.
 
 Put this in your `~/.vimrc` to instruct setswitch to store the values of the following
 options whenever the user sets them. Whenever the cursor enters the window where these are
 set, setswitch will set these values even if they were globally set in another window.
-This pairs nicely with Tpope's [vim-unimpaired](https://github.com/tpope/vim-unimpaired)
-plugin:
+This pairs nicely with Tpope's vim-unimpaired plugin: https://github.com/tpope/vim-unimpaired
 
 ```vim
 let g:setswitch_hooks = ['cursorline', 'cursorcolumn', 'relativenumber', 'wrap', 'hlsearch', 'colorcolumn']
 ```
 
-#### g:setswitch_no{option}_filetypes
+#### g:setswitch_exclude
 
-Put this in your `~/.vimrc`, replacing {option} with a Vim option, and set it equal to a
-list of filetypes to prevent setswitch from setting the named option in those filetypes
-when the window is focused. This is useful when you have added an option to
-`g:setswitch_toggle` that you do not want in certain filetypes.
-
-For example, put the following in your `~/.vimrc` to prevent these filetypes from setting
-the options in the list.
+g:setswitch_exclude is a **Dictionary** of the form:
 
 ```vim
-let g:setswitch_nocursorline_filetypes = ['markdown', 'netrw', 'man', 'help']
-let g:setswitch_nocursorcolumn_filetypes = ['markdown', 'netrw', 'man', 'help']
-let g:setswitch_nocolorcolumn_filetypes = ['netrw', 'man', 'help']
+g:setswitch_exclude = { filetype: ['option', 'option', 'option'...], }
 ```
 
-#### g:setswitch_{option}
+Put this in your `~/.vimrc`, to set options when the cursor enters certain filetypes.
+You're probably wondering why this is needed when the `~/.vim/ftplugin` directory exists.
+It's to prevent setswitch from activating options when you leave a window of a certain
+filetype without closing the window and then reenter it later. Unfortunately this is the
+best we can manage with Vim's present capabilities.
 
-`g:setswitch_{option}` sets the default for whatever option you are setting, where
-`{option}` is any option available in Vim/Neovim. This is helpful for values that are
-evaluations of expressions. For example the value of `colorcolumn` is the summation of the
-expression <textwidth + 1>:
+Here is a useful example:
 
 ```vim
-let g:setswitch_colorcolumn = '&l:textwidth + 1'
+let g:setswitch_exclude = {
+    \ { 'netrw': ['nocolorcolumn', 'nocursorline', 'nocursorcolumn'] },
+    \ { 'man': ['nocolorcolumn', 'nocursorline', 'nocursorcolumn'] },
+    \ { 'help': ['nocolorcolumn', 'nocursorline', 'nocursorcolumn'] },
+    \ }
 ```
 
-Use this when you need the default to be set to something specific, like an **expression**
-or a **string**.
+Setswitch will set these options when entering the corresponding `netrw`, `man`, and
+`help` filetypes.
 
 ## Contributing
 
