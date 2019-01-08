@@ -4,11 +4,12 @@ setswitch.vim
 _setswitch.vim: a user extensible plugin that adds window local capabilities to all
 options in Vim._
 
-setswitch is probably the most useful plugin I've created. I literally wouldn't want to
-use Vim without it. Here's why:
+setswitch is probably the most useful plugin I've created. I wouldn't want to use Vim
+without it. Here's why:
 
-- setswitch allows you dynamically run setting upon entering a window. That means even
-  settings like `hlsearch` can be window local with setswitch.
+- setswitch allows you to run settings upon entering a window, and turn them off when you
+  leave the window. That means even settings like `hlsearch` can be window local with
+  setswitch.
 - setswitch is only limited to your imagination. It works with _any setting_.
 
 ## Install
@@ -38,7 +39,7 @@ available in Vim/Neovim.
 g:setswitch is a **Dictionary** of the form:
 
 ```vim
-g:setswitch = { filetype: ['option', 'option', 'option'...], }
+g:setswitch = { filetype: ['option=value', 'option=value', 'option=value'...], }
 ```
 
 Put this in your `~/.vimrc`, to set options when the cursor enters certain filetypes.

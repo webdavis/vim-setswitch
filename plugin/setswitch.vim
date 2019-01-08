@@ -37,12 +37,12 @@ function! s:WindowEnter(dictionary, file)
         if !has_key(g:setswitch, &filetype)
             if has_key(g:setswitch, 'all')
                 for l:option in g:setswitch['all']
-                    execute printf('set %s', l:option)
+                    execute printf('setlocal %s', l:option)
                 endfor
             endif
         else
             for l:option in g:setswitch[&filetype]
-                execute printf('set %s', l:option)
+                execute printf('setlocal %s', l:option)
             endfor
         endif
     endif
@@ -87,8 +87,6 @@ endfunction
 let g:setswitch = get(g:, 'setswitch', {})
 
 let s:setswitch_insert = get(s:, 'setswitch_insert', {})
-
-let s:setswitch_command = get(s:, 'setswitch_command', {})
 
 let s:setswitch_dict = get(s:, 'setswitch_dict', {})
 
