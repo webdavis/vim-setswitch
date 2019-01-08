@@ -73,7 +73,7 @@ The following setting turns `relativenumber` and `hlsearch` off when entering th
 command-line.
 
 ```vim
-let g:setswitch_command_toggle = ['relativenumber', 'hlsearch']
+let g:setswitch_command_toggle = ['relativenumber', 'cursorline', 'cursorcolumn', 'colorcolumn']
 ```
 
 #### g:setswitch_hooks
@@ -109,9 +109,9 @@ Here is a useful example:
 
 ```vim
 let g:setswitch_exclude = {
-    \ { 'netrw': ['nocolorcolumn', 'nocursorline', 'nocursorcolumn'] },
-    \ { 'man': ['nocolorcolumn', 'nocursorline', 'nocursorcolumn'] },
-    \ { 'help': ['nocolorcolumn', 'nocursorline', 'nocursorcolumn'] },
+    \ { 'netrw': ['colorcolumn=', 'nocursorline', 'nocursorcolumn'] },
+    \ { 'man': ['colorcolumn=', 'nocursorline', 'nocursorcolumn'] },
+    \ { 'help': ['colorcolumn=', 'nocursorline', 'nocursorcolumn'] },
     \ }
 ```
 

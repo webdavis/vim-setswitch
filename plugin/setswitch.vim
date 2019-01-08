@@ -30,7 +30,7 @@ function! s:Fnameescape(file)
     endif
 endfunction
 
-let g:setswitch_filetype = get(g:, 'setswitch_filetype', {})
+let g:setswitch_exclude = get(g:, 'setswitch_exclude', {})
 
 function! s:Cache(dictionary, file, key, value)
     call extend(eval('a:dictionary'), eval('{a:file: {},}'), 'keep')
@@ -48,8 +48,8 @@ function! s:WindowEnter(dictionary, file)
                     execute printf("let &l:%s = '%s'", l:option[0], l:option[1])
                 endif
             endfor
-        elseif has_key(g:setswitch_filetype, &filetype)
-            for l:option in g:setswitch_filetype[&filetype]
+        elseif has_key(g:setswitch_exclude, &filetype)
+            for l:option in g:setswitch_exclude[&filetype]
                 execute printf('set %s', l:option)
             endfor
         endif

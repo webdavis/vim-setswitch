@@ -58,8 +58,6 @@ GLOBAL-LISTS ~
 
 g:setswitch_toggle                                          *setswitch_toggle*
 
-g:setswitch_toggle = []
-
 	g:setswitch_toggle takes a |List| of options as an argument. It turns
 	these options on upon the cursor entering a window, and off upon the
 	cursor exiting the window.
@@ -100,7 +98,7 @@ g:setswitch_command_toggle                          *setswitch_command_toggle*
         The following setting turns |relativenumber| and |hlsearch| off when
         entering the command-line.
  >
-        let g:setswitch_command_toggle = ['relativenumber', 'hlsearch']
+        let g:setswitch_command_toggle = ['relativenumber', 'cursorline', 'cursorcolumn', 'colorcolumn']
 <
 
 g:setswitch_hooks                                            *setswitch_hooks*
@@ -141,9 +139,9 @@ g:setswitch_exclude        		                  g:setswitch_exclude*
 	Here is a useful example:
  >
 	let g:setswitch_exclude = {
-	    \ { 'netrw': ['nocolorcolumn', 'nocursorline', 'nocursorcolumn'] },
-	    \ { 'man': ['nocolorcolumn', 'nocursorline', 'nocursorcolumn'] },
-	    \ { 'help': ['nocolorcolumn', 'nocursorline', 'nocursorcolumn'] },
+	    \ { 'netrw': ['colorcolumn=', 'nocursorline', 'nocursorcolumn'] },
+	    \ { 'man': ['colorcolumn=', 'nocursorline', 'nocursorcolumn'] },
+	    \ { 'help': ['colorcolumn=', 'nocursorline', 'nocursorcolumn'] },
 	    \ }
 <
 	Setswitch will set these options when entering the corresponding
