@@ -1,11 +1,11 @@
 setswitch.vim
 =============
 
-_setswitch.vim: a user extensible plugin that adds buffer local settings to all settings
-in Vim._
+_setswitch.vim: a user extensible plugin that adds buffer local capabilities to all
+options in Vim._
 
-I won't lie to you, setswitch is probably the most useful plugin I've created. I literally
-wouldn't want to use Vim without it. Here's why:
+setswitch is probably the most useful plugin I've created. I literally wouldn't want to
+use Vim without it. Here's why:
 
 - setswitch makes all settings buffer local. That means even settings like `hlsearch` are
   buffer local with setswitch.
@@ -67,7 +67,7 @@ let g:setswitch_cmdmode_toggle = ['relativenumber', 'hlsearch']
 #### g:setswitch_hooks
 
 g:setswitch_hooks takes a **List** of options instructing setswitch to listen for these
-options being set using the `OptionSet` autocommand.  If they are set then setswitch will
+options being set using the `OptionSet` autocommand. If they are set then setswitch will
 store the option and value of the option in the dictionary `g:setswitch` by file name.
 
 Put this in your `~/.vimrc` to instruct setswitch to store the values of the following
