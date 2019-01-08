@@ -70,7 +70,7 @@ function! s:CursorWinLeaveNormal()
 endfunction
 
 function! s:CommandModeEnter()
-    for l:option in g:setswitch_cmdmode_toggle
+    for l:option in get(g:, 'setswitch_cmdmode_toggle', [])
         if !get(b:, eval(string('setswitch_cmdmode_' . l:option . '_frozen')), 0)
             execute printf("let &l:%s = 0", l:option)
             execute 'redraw!'
