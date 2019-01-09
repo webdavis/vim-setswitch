@@ -30,7 +30,7 @@ function! s:Fnameescape(file)
     endif
 endfunction
 
-let s:setswitch_filetype = get(s:, 'setswitch_filetype', {})
+let g:setswitch_filetype = get(g:, 'setswitch_filetype', {})
 
 function! s:Cache(dictionary, file, key, value)
     call extend(eval('a:dictionary'), eval('{a:file: {},}'), 'keep')
