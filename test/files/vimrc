@@ -1,10 +1,8 @@
-if !has('nvim')
-    set nocompatible
-endif
+if !has('nvim') | set nocompatible | endif
 
 " Set some defaults.
 set runtimepath^=~/.vim
-set runtimepath+=~/.vim/after
+" set runtimepath+=~/.vim/after
 let &packpath = &runtimepath
 set number relativenumber
 set cursorline cursorcolumn
@@ -21,31 +19,34 @@ runtime! ftplugin/man.vim
 " Begin plugins.
 call plug#begin('~/.vim/plugged')
 
-" Install a super statusline and colorscheme.
-Plug 'itchyny/lightline.vim' | Plug 'webdavis/vim-denver'
+" Install a super statusline.
+Plug 'itchyny/lightline.vim'
 
-" Provides Git editing tools for Vim.
-Plug 'tpope/vim-fugitive'
+" For testing nerdtree compatibility.
+Plug 'scrooloose/nerdtree'
+Plug 'majutsushi/tagbar'
+Plug 'ludovicchabant/vim-gutentags'
 
 call plug#end()
 
 " If lightline.vim is installed and synced then do not show the mode (NORMAL, INSERT, et
 " cetera) at bottom of editor window.
 if isdirectory(finddir('lightline.vim', expand('~/.vim') . '/**')) && get(g:, 'denver_sync_lightline', 0)
-    set noshowmode
+   set noshowmode
 endif
 
-" If TRUECOLOR is available then enable it.
-if has("termguicolors") | let &g:termguicolors = 1 | endif
-
 " Set the colorscheme.
-colorscheme denverdark
+colorscheme slate
 
 " Provides user extensible buffer local capabilites for all Vim options.
 " Enable the mouse.
 if has('mouse')
     set mouse=ar
 endif
+
+" This is necessary since creator won't add a custom autocommand for users to plug into.
+" See this issue: https://github.com/majutsushi/tagbar/issues/146
+let g:tagbar_show_linenumbers = 1
 
 " Toggle these settings upon entering and exiting a window.
 let g:setswitch = {
@@ -54,6 +55,8 @@ let g:setswitch = {
         \ 'man': ['colorcolumn=', 'nocursorline', 'nocursorcolumn'],
         \ 'help': ['colorcolumn=', 'nocursorline', 'nocursorcolumn'],
         \ 'gitcommit': ['colorcolumn=+1,51', 'nocursorline', 'nocursorcolumn', 'relativenumber'],
+        \ 'nerdtree': ['colorcolumn=', 'nocursorline', 'nocursorcolumn', 'number', 'relativenumber'],
+        \ 'tagbar': ['colorcolumn=', 'nocursorline', 'nocursorcolumn', 'number', 'relativenumber'],
         \ }
 
 " Toggle these settings upon entering and exiting insert mode.

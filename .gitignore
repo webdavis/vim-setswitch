@@ -1,3 +1,6 @@
+# Ignore all tags files.
+tags
+
 # Ignore Vim tags file.
 /doc/tags
 

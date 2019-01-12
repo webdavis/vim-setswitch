@@ -16,13 +16,13 @@ without it. Here's why:
 
 To install setswitch use any one of your favorite plugin managers.
 
-#### [vim-plug](https://github.com/junegunn/vim-plug)
+### [vim-plug](https://github.com/junegunn/vim-plug)
 
 ```vim
 Plug 'webdavis/vim-denver'
 ```
 
-#### Manual Install
+### Manual Install
 
 Install it in Vim 8.0, like so:
 
@@ -34,7 +34,7 @@ Install it in Vim 8.0, like so:
 setswitch is user extensible, meaning that the following settings should take any option
 available in Vim/Neovim.
 
-#### g:setswitch
+### g:setswitch
 
 g:setswitch is a **Dictionary** of the form:
 
@@ -65,7 +65,29 @@ Setswitch will run `set colorcolumn=+1 cursorline cursorcolumn relativenumber` o
 filetypes except the `netrw`, `man`, `help`, and `gitcommit` filetypes. For those
 filetypes their respective entries will be set.
 
-#### g:setswitch_insert
+#### Tagbar
+
+Tagbar is supported. To enable it add the following entry to your `g:setswitch`
+dictionary.
+
+```vim
+let g:setswitch = {
+        \ 'tagbar': ['colorcolumn=', 'nocursorline', 'nocursorcolumn', 'number', 'relativenumber'],
+        \ }
+```
+
+#### NERDTree
+
+NERDTree is supported. To enable it add the following entry to your `g:setswitch`
+dictionary.
+
+```vim
+let g:setswitch = {
+        \ 'nerdtree': ['colorcolumn=', 'nocursorline', 'nocursorcolumn', 'number', 'relativenumber'],
+        \ }
+```
+
+### g:setswitch_insert
 
 Insert mode has it's own controller variable so that you can do unique things with it. It
 works a little different than `g:setswitch`. It has the form:
@@ -87,21 +109,28 @@ let g:setswitch_insert = {
 Setswitch will run `set nocursorline nocursorcolumn norelativenumber` on all filetypes
 when entering insert mode.
 
-#### g:setswitch_hooks
+### g:setswitch_hooks
 
-`g:setswitch_hooks` takes a **List** of options instructing setswitch to listen for these
-options being set using the `OptionSet` autocommand. If they are set then setswitch will
-store the option and value of the option in the dictionary `s:setswitch`, by file name.
+`g:setswitch_hooks` takes a **List** of options instructing setswitch to use the
+`OptionSet` autocommand to listen for these options being set. If they are set then
+setswitch will store the option and value of the option in the dictionary
+`s:setswitch_dict`, by file name.
 
 Put this in your `~/.vimrc` to instruct setswitch to store the values of the following
 options whenever the user sets them. Whenever the cursor enters the window where these
-were set, setswitch will set these values even if they were globally set in another
-window. This pairs nicely with Tpope's vim-unimpaired plugin:
+were unset, setswitch will set these values even if the option only has a global scope and
+was unset in another window. This pairs nicely with Tpope's vim-unimpaired plugin:
 https://github.com/tpope/vim-unimpaired
 
 ```vim
 let g:setswitch_hooks = ['cursorline', 'cursorcolumn', 'relativenumber', 'wrap', 'hlsearch', 'colorcolumn']
 ```
+
+---
+
+> Note: this feature will be disabled if `g:setswitch_hooks` is empty or doesn't exist:
+
+---
 
 ## Contributing
 

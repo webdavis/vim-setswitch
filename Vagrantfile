@@ -94,6 +94,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         os.vm.provision 'nvimrc', type: 'shell', inline: $provision_nvimrc, name: 'provision_nvimrc', privileged: false
         os.vm.provision 'plug', type: 'shell', inline: $provision_plug, name: 'provision_plug', privileged: false
         os.vm.provision 'setswitch', type: 'shell', inline: $provision_setswitch, name: 'provision_setswitch', privileged: false
+        os.vm.provision 'ctags', type: 'shell', inline: $provision_ctags, name: 'provision_ctags', privileged: false
         # os.vm.provision 'desktop', type: 'shell', inline: $archlinux_desktop, privileged: true
     end
 end
@@ -115,6 +116,16 @@ EOP
 $provision_plug = <<-'EOP'
 curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+EOP
+
+$provision_ctags = <<-'EOP'
+sudo pacman --sync --noconfirm autoconf pkgconf make automake gcc
+git clone https://github.com/universal-ctags/ctags.git ~/ctags
+cd ~/ctags
+./autogen.sh
+./configure
+make
+sudo make install
 EOP
 
 $provision_setswitch = <<-'EOP'
