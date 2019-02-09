@@ -3,18 +3,18 @@
 " Repository: vim-setswitch
 " Description: consolidates visual noise to provide a cleaner workflow.
 
-" See the following documentation:
-"   :help compatible
-"   :help vim7
-"   https://semver.org/
+" See: https://semver.org/
 let g:setswitch_version = '0.1.0'
-
-if exists('g:loaded_setswitch') || &compatible || v:version <? 700
-    finish
-endif
 
 if !has('autocmd')
     echoerr "Could not load " . expand('%') . ": editor has not been compiled with autocommand support."
+    finish
+endif
+
+" See the following help files:
+"   :help compatible
+"   :help vim7
+if exists('g:loaded_setswitch') || &compatible || v:version <? 700
     finish
 endif
 
@@ -23,11 +23,11 @@ let s:save_cpoptions = &g:cpoptions
 set cpoptions&vim
 let g:loaded_setswitch = 1
 
-function! s:GetName() abort
+function s:GetName() abort
     let l:name = substitute(substitute(l:option, '=.*', '', ''), 'no', '', '')
 endfunction
 
-function! s:Fnameescape(file) abort
+function s:Fnameescape(file) abort
     if exists('*fnameescape')
         return fnameescape(a:file)
     else
@@ -35,17 +35,17 @@ function! s:Fnameescape(file) abort
     endif
 endfunction
 
-function! s:Fnamemodify() abort
+function s:Fnamemodify() abort
     return s:Fnameescape(fnamemodify(expand('%'), ':p'))
 endfunction
 
-function! s:Set(option) abort
+function s:Set(option) abort
     execute printf('setlocal %s', a:option)
 endfunction
 
 " This will be called when entering a file. If one of the options in g:setswitch_hooks has
 " been set in that file, it will override it's value in g:setswitch.
-function! s:SetHook() abort
+function s:SetHook() abort
     let l:filename = s:Fnamemodify()
     if has_key(s:setswitch_dict, l:filename)
         for l:hook in items(get(s:setswitch_dict, l:filename))
@@ -58,7 +58,7 @@ function! s:SetHook() abort
     endif
 endfunction
 
-function! s:SwitchOn() abort
+function s:SwitchOn() abort
     if has_key(g:setswitch, &filetype)
         for l:option in g:setswitch[&filetype]
             call s:Set(l:option)
@@ -74,16 +74,16 @@ function! s:SwitchOn() abort
     endif
 endfunction
 
-function! s:StripOption(string) abort
+function s:StripOption(string) abort
         return substitute(substitute(a:string, '=.*', '', ''), 'no', '', '')
 endfunction
 
-function! s:GetValue(option) abort
+function s:GetValue(option) abort
         return eval('&l:' . substitute(a:option, '+\|-', '', ''))
 endfunction
 
-" Strips the text that isn't a part of the base option before 
-function! s:Unset(dictionary, key) abort
+" Strips down options to their base names and turns them off.
+function s:Unset(dictionary, key) abort
     for l:option in a:dictionary[a:key]
         let l:name = s:StripOption(l:option)
         let l:value = s:GetValue(l:name)
@@ -96,7 +96,7 @@ function! s:Unset(dictionary, key) abort
     endfor
 endfunction
 
-function! s:SwitchOff(dictionary) abort
+function s:SwitchOff(dictionary) abort
     if has_key(a:dictionary, &filetype)
         call s:Unset(a:dictionary, &filetype)
     elseif has_key(a:dictionary, 'all')
@@ -106,19 +106,21 @@ endfunction
 
 let g:setswitch = get(g:, 'setswitch', {})
 
-let s:setswitch_insert = get(s:, 'setswitch_insert', {})
+let g:setswitch_insert = get(g:, 'setswitch_insert', {})
 
 let s:setswitch_dict = get(s:, 'setswitch_dict', {})
 
 augroup setswitch
     autocmd!
     autocmd FileType man,netrw,help call <SID>SwitchOn()
+
+    " NERDTree support.
     autocmd User NERDTreeInit,NERDTreeNewRoot
             \ if exists('b:NERDTree.root.path.str') | call <SID>SwitchOn() | endif
 
     autocmd WinEnter * autocmd! FileType tagbar call <SID>SwitchOn()
 
-    autocmd FocusGained,WinEnter * call <SID>SwitchOn()
+    autocmd FocusGained,WinEnter,BufEnter * call <SID>SwitchOn()
     autocmd FocusLost,WinLeave * call <SID>SwitchOff(g:setswitch)
 
     " Insert mode is managed independently.
@@ -126,7 +128,7 @@ augroup setswitch
     autocmd InsertLeave * call <SID>SwitchOn()
 augroup END
 
-function! s:Store(dictionary, file, key, value) abort
+function s:Store(dictionary, file, key, value) abort
     call extend(eval('a:dictionary'), eval('{a:file: {},}'), 'keep')
     call extend(eval('a:dictionary[a:file]'), eval('{a:key: a:value}'), 'force')
 endfunction
