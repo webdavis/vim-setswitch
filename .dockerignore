@@ -1,0 +1,9 @@
+# Don't add ctags to the containers.
+tags
+
+# Don't add Vim swap files or Session files to the containers.
+Session.vim
+*.sw*
+
+# Don't add the .git repository to the containers.
+.git/

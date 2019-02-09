@@ -1,16 +1,16 @@
-# Ignore all tags files.
+# Ignore all ctags files.
 tags
 
 # Ignore Vim tags file.
 /doc/tags
 
-# Ignore the Vagrant's guest machine directory.
-.vagrant
+# Ignore Vim swap files.
+*.sw*
+
+# Ignore Vim session files
+Session.vim
 
 # Ignore files created by `make`.
 *.res
 test.log
 messages
-
-# Ignore a .vimrc file created by test script.
-.vimrc

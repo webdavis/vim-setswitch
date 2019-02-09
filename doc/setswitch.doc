@@ -11,7 +11,7 @@ TABLE-OF-CONTENTS				 *setswitch-table-of-contents*
 1.  Overview             |setswitch-overview|
 2.  Installation         |setswitch-installation|
 4.  Configuration        |setswitch-configuration|
-5.  Vagrant              |setswitch-vagrant|
+5.  Docker               |setswitch-docker|
 6.  Tests		 |setswitch-tests|
 7.  Contributing         |setswitch-contributing|
 8.  License	         |setswitch-license|
@@ -117,20 +117,31 @@ g:setswitch_hooks = []                                     *g:setswitch_hooks*
 <
 
 ==============================================================================
-VAGRANT                                                    *setswitch-vagrant*
+Docker                                                      *setswitch-docker*
 
-        If you want to try setswitch out before installing it, there is a
-        'Vagrantfile' that provisions a guest machine using shell scripts.
+        If you want to try setswitch out before installing it, there are
+	'Dockerfile's for Arch Linux and Ubuntu, that build images of the
+	operating systems, provisioned with setswitch.
 
-        Simple run the following commands from within the 'vim-setswitch'
-        directory to try it out:
+        Simply run the following commands from within the project root
+	directory './vim-setswitch'.
+
+	Create image:
  >
-        vagrant up Arch-Linux-setswitch
-        vagrant ssh Arch-Linux-setswitch
+	sudo docker build \
+	    --tag vim-setswitch/archlinux \
+	    --file test/docker/archlinux/Dockerfile .
 <
- 	(Note that you may tailor the 'vagrant up --provision-with' command to
-        your needs. Read through the 'Vagrantfile' for the available
-        provisions.
+	Enter container:
+ >
+	sudo docker run --rm -ti \
+	    --hostname archlinux \
+	    --name vim-setswitch.archlinux \
+	    vim-setswitch/archlinux
+<
+	(Note: you may tailor the 'docker' commands to your needs. Read
+	through the 'vim-setswitch/test/docker/<os>/Dockerfile's for the
+	available provisions.
 
 ==============================================================================
 TESTS                                                        *setswitch-tests*

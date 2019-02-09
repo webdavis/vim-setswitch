@@ -1,50 +1,52 @@
-if !has('nvim') | set nocompatible | endif
+" Settings for test script execution. Always use "sh", don't use the value of $SHELL.
+set shell=sh
 
-" Set some defaults.
+" Always use utf-8, instead of depending on the system locale.
+set encoding=utf-8
+
+" Use default shell on Windows to avoid segfault, caused by TUI.
+if has('win32')
+    let $SHELL = ''
+    let $TERM = ''
+    let &shell = empty($COMSPEC) ? exepath('cmd.exe') : $COMSPEC
+    set shellcmdflag=/s/c shellxquote=\" shellredir=>%s\ 2>&1
+    let &shellpipe = &shellredir
+endif
+
+" Set the runtimepath. To run plugin tests spin up the Ubuntu environment with the
+" provided Dockerfile.
 set runtimepath^=~/.vim
-" set runtimepath+=~/.vim/after
-let &packpath = &runtimepath
-set number relativenumber
-set cursorline cursorcolumn
-set diffopt+=vertical
-set colorcolumn=+1
-set textwidth=90
-set viminfo+=!
-set sessionoptions+=globals
+if has('packages')
+   let &packpath = &runtimepath
+endif
+
+" Put settings that should be managed normally, here.
+set number
+
+" Provides user extensible buffer local capabilites for all Vim options.
+" Enable the mouse.
+if has('mouse') | set mouse=ar | endif
+
+" Set the colorscheme.
+colorscheme slate
+
 filetype plugin indent on
 
 " View man pages using :Man command.
 runtime! ftplugin/man.vim
 
-" Begin plugins.
 call plug#begin('~/.vim/plugged')
 
-" Install a super statusline.
-Plug 'itchyny/lightline.vim'
-
-" For testing nerdtree compatibility.
+" For testing some plugin compatibility.
 Plug 'scrooloose/nerdtree'
 Plug 'majutsushi/tagbar'
 Plug 'ludovicchabant/vim-gutentags'
 
 call plug#end()
 
-" If lightline.vim is installed and synced then do not show the mode (NORMAL, INSERT, et
-" cetera) at bottom of editor window.
-if isdirectory(finddir('lightline.vim', expand('~/.vim') . '/**')) && get(g:, 'denver_sync_lightline', 0)
-   set noshowmode
-endif
+" Tells NERDtree whether to display line numbers in the tree window.
+let g:NERDTreeShowLineNumbers = 1
 
-" Set the colorscheme.
-colorscheme slate
-
-" Provides user extensible buffer local capabilites for all Vim options.
-" Enable the mouse.
-if has('mouse')
-    set mouse=ar
-endif
-
-" This is necessary since creator won't add a custom autocommand for users to plug into.
 " See this issue: https://github.com/majutsushi/tagbar/issues/146
 let g:tagbar_show_linenumbers = 1
 
@@ -72,8 +74,8 @@ nnoremap <special> <F8> :<C-U>messages clear<CR>
 nnoremap <special> <F9> :<C-U>messages<CR>
 nnoremap <special> <F7> :execute "let a = ' '"<CR>:help<C-R>=a<CR>
 
-" Enable For Testing: uncomment this function and run `tail -f autocommand.log` to see
-" autocmd's caught in real-time.
+" Enable For Testing Autocommands: uncomment this function and run
+" `tail -f autocommand.log` to see autocmd's caught in real-time.
 " function! s:LogAutocommands(event_name) abort
 "     silent execute '!echo ' . a:event_name . ' >> autocommand.log'
 " endfunction
