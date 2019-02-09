@@ -12,5 +12,5 @@ Session.vim
 
 # Ignore files created by `make`.
 *.res
-test.log
+logs/
 messages
