@@ -1,6 +1,6 @@
-# This Dockerfile configures an Arch Linux test environment.
+# This Dockerfile configures an CentOS 7 test environment.
 #
-# Run the following commands from the project root ./vim-setswitch/.
+# Run the following commands from the project root folder vim-setswitch/.
 #
 # Create image:
 #
@@ -10,45 +10,67 @@
 # Enter container:
 #
 #   $ sudo docker run --rm -ti \
-#         --hostname archlinux \
+#         --hostname centos-7 \
 #         --name test-vim-setswitch \
 #         test-vim-setswitch
 #
-FROM archlinux/base:latest
+FROM centos:latest
+ENV container docker
 
-# Installs required packages for Vim, Neovim, and plugins.
-RUN pacman -Syu --noconfirm sudo vim neovim git autoconf pkgconf make automake gcc tree
+#########################################################################################
+# Note! Layers are not condensed on-purpose. This will never be reimaged and having
+# separate layers aids debugging in TravisCI.
+#########################################################################################
 
-ENV HOME /home/user
+# Fixes the PID 1 zombie reaping problem. Read the following resources in their respective
+# order:
+# - https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/
+# - https://developers.redhat.com/blog/2016/09/13/running-systemd-in-a-non-privileged-container/
+# - https://github.com/solita/docker-systemd
+# Fixing this ensures the proper propagation of signals to the init process (systemd).
+RUN find /etc/systemd/system \
+        /lib/systemd/system \
+        -path '*.wants/*' \
+        -not -name '*journald*' \
+        -not -name '*systemd-tmpfiles*' \
+        -not -name '*systemd-user-sessions*' \
+        -exec rm \{} \;
+RUN /usr/bin/systemctl set-default multi-user.target
 
-# Create the user account and set the account password to "user".
-RUN useradd --create-home --user-group user \
-        && echo 'user ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/user \
-        && chmod 440 /etc/sudoers.d/user \
-        && echo 'user:user' | chpasswd
+# Systemd expects SIGRTMIN+3 from `docker stop` to gracefully shutdown.
+STOPSIGNAL SIGRTMIN+3
 
-# Install plugins.
-RUN curl -fLo "${HOME}/.vim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim \
-        && git clone https://github.com/universal-ctags/ctags.git "${HOME}/ctags" \
-        && cd "${HOME}/ctags" \
-        && ./autogen.sh \
-        && ./configure \
-        && make \
-        && make install
+ENV HOME /home/localuser
 
-# Create configuration directories and copy files over.
-COPY . ${HOME}/.vim
-RUN mkdir --parents -- "${HOME}/.config" \
-        && ln -sf "${HOME}/.vim/test/files/vimrc" "${HOME}/.vimrc" \
-        && ln -sf "${HOME}/.vim" "${HOME}/.config/nvim" \
-        && ln -sf "${HOME}/.vim/test/files/init.vim" "${HOME}/.vim/init.vim"
+RUN yum update -y
+RUN /usr/bin/systemctl enable systemd-user-sessions.service
 
-# This allows you to run :PlugInstall without entering Vim. See this post:
-# https://github.com/junegunn/vim-plug/issues/225
-RUN nvim -E -s -u "${HOME}/.vimrc" +PlugInstall +qall
-RUN chown --recursive user:user "$HOME"
+RUN useradd --create-home localuser
+RUN echo 'localuser:localuser' | chpasswd
+RUN echo 'localuser ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/localuser
+RUN chmod 440 /etc/sudoers.d/localuser
+
+# Installs required packages for Vim, Neovim, and dependencies for Vim plugins compatible
+# with vim-setswitch.
+RUN curl -o /etc/yum.repos.d/dperson-neovim-epel-7.repo https://copr.fedorainfracloud.org/coprs/dperson/neovim/repo/epel-7/dperson-neovim-epel-7.repo
+RUN yum install -y epel-release
+RUN yum install -y sudo vim-X11 neovim git autoconf pkgconfig make automake gcc tree
+RUN git clone https://github.com/universal-ctags/ctags.git "${HOME}/ctags"
+WORKDIR "${HOME}/ctags"
+RUN ./autogen.sh
+RUN ./configure
+RUN make
+RUN make install
+RUN chown --recursive localuser:localuser "$HOME"
+
+# Run inside an unprivileged user account to mimic the real world usage.
+USER localuser
+
+# Ensure Plug, a Vim plugin manager is installed.
+RUN curl -fLo "${HOME}/.vim/autoload/plug.vim" --create-dirs \
+        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
 WORKDIR $HOME
-USER user
 
-CMD ["/bin/bash"]
+VOLUME ["/sys/fs/cgroup"]
+CMD ["/usr/sbin/init"]
