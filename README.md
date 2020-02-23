@@ -1,4 +1,4 @@
-setswitch.vim
+setswitch.vim - UNSTABLE
 =============
 
 _setswitch.vim: a user extensible plugin that adds window local capabilities to all
