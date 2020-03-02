@@ -3,7 +3,6 @@
 " Repository: vim-setswitch
 " Description: consolidates visual noise to provide a cleaner workflow.
 
-" TODO: fix colorcolumn failure (first reproduce bug, and then fix).
 " TODO: fix help window toggling number off when leaving.
 
 " See: https://semver.org/
@@ -66,11 +65,11 @@ endfunction
 function! s:switch(...) abort
   try
     if a:0
-      for l:option in a:1[s:getSetswitchKey()]
+      for l:option in a:1[s:get_key()]
         call s:unset(l:option)
       endfor
     else
-      for l:option in g:setswitch[s:getSetswitchKey()]
+      for l:option in g:setswitch[s:get_key()]
         call s:set(l:option)
       endfor
     endif
@@ -78,11 +77,22 @@ function! s:switch(...) abort
   endtry
 endfunction
 
+function! s:focus_insert() abort
+  call <SID>switch(g:setswitch_insert)
+  let l:list1 = copy(g:setswitch[s:get_key()])
+  let l:list2 = copy(g:setswitch_insert[s:get_key()])
+  let l:intersection = filter(l:list1, 'index(l:list2, v:val) == -1')
+  for l:option in l:intersection
+    call s:set(l:option)
+  endfor
+endfunction
+
 augroup setswitch
   autocmd!
   autocmd FileType man,netrw,help call <SID>switch()
   autocmd WinEnter * autocmd! FileType tagbar call <SID>switch()
-  autocmd FocusGained,WinEnter,BufEnter * call <SID>switch()
+  autocmd FocusGained * call eval('mode() ==# "i" ? <SID>focus_insert() : <SID>switch()')
+  autocmd WinEnter,BufEnter * call <SID>switch()
   autocmd FocusLost,WinLeave * call <SID>switch(g:setswitch)
 
   " Insert mode is managed independently.
