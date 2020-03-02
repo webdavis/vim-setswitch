@@ -3,7 +3,6 @@
 " Repository: vim-setswitch
 " Description: consolidates visual noise to provide a cleaner workflow.
 
-" TODO: add support for vim terminal.
 " TODO: fix colorcolumn failure (first reproduce bug, and then fix).
 " TODO: fix help window toggling number off when leaving.
 
@@ -36,23 +35,7 @@ function! s:filepath() abort
   return s:fnameescape(fnamemodify(expand('%'), ':p'))
 endfunction
 
-function! s:getValueLiteral(value) abort
-  return type(a:value) ==? type(v:t_number) ? a:value : \'a:value\'
-endfunction
-
-" This will be called when entering a file. If one of the options in g:setswitch_optionset
-" has been set in that file, it will override it's value in g:setswitch.
-function! s:setHook() abort
-  try
-    for l:hook in items(get(g:setswitch_optionset, s:filepath()))
-      execute printf("let &l:%s = %s", l:hook[0], s:getValueLiteral(l:hook[1]))
-    endfor
-  catch /^Vim\%((\a\+)\)\=:E123/
-    return
-  endtry
-endfunction
-
-function! s:getSetswitchKey() abort
+function! s:get_key() abort
   return has_key(g:setswitch, s:filepath()) ? s:filepath() :
           \ has_key(g:setswitch, &filetype) ? &filetype :
           \ has_key(g:setswitch, &buftype) ? &buftype :
@@ -63,21 +46,21 @@ function! s:set(option) abort
   execute 'setlocal ' . a:option
 endfunction
 
-function! s:baseOptionName(option) abort
+function! s:base_option_name(option) abort
   return substitute(substitute(a:option, '=.*', '', ''), 'no', '', '')
 endfunction
 
-function! s:optionValue(option) abort
+function! s:option_value(option) abort
   return eval('&l:' . substitute(a:option, '+\|-', '', ''))
 endfunction
 
-function! s:unsetValue(value) abort
+function! s:unset_value(value) abort
   return type(a:value) ==? type(v:t_number) ? 0 : "''"
 endfunction
 
 function! s:unset(option) abort
   " Strips down options to their base names and turns them off.
-  execute printf("let &l:%s = %s", s:baseOptionName(a:option), s:unsetValue(s:optionValue(s:baseOptionName(a:option))))
+  execute printf("let &l:%s = %s", s:base_option_name(a:option), s:unset_value(s:option_value(s:base_option_name(a:option))))
 endfunction
 
 function! s:switch(...) abort
@@ -111,18 +94,18 @@ augroup setswitch
           \ if exists('b:NERDTree.root.path.str') | call <SID>switch() | endif
 augroup END
 
-function! s:addFileKeyToSetswitch() abort
+function! s:add_filekey_to_setswitch() abort
   call extend(g:setswitch, eval('{s:filepath(): [],}'), 'keep')
 endfunction
 
-function! s:filterOption(key) abort
+function! s:filter_option(key) abort
   if match(g:setswitch[s:filepath()], "'.*".a:key.".*'")
     call filter(g:setswitch[s:filepath()], 'v:val !~# "'.a:key.'"')
   endif
 endfunction
 
-function! s:addFileValueToSetswitch(key, value) abort
-  call s:filterOption(a:key)
+function! s:add_filevalue_to_setswitch(key, value) abort
+  call s:filter_option(a:key)
   call extend(
           \ g:setswitch[s:filepath()],
           \ [eval('a:value || a:key ==# "colorcolumn" ? a:key : "no".a:key')
@@ -131,11 +114,11 @@ function! s:addFileValueToSetswitch(key, value) abort
 endfunction
 
 function! s:store(key, value) abort
-  call s:addFileKeyToSetswitch()
-  call s:addFileValueToSetswitch(a:key, a:value)
+  call s:add_filekey_to_setswitch()
+  call s:add_filevalue_to_setswitch(a:key, a:value)
 endfunction
 
-function! s:hasOptionSet() abort
+function! s:has_option_set() abort
   return exists('g:setswitch_optionset') && !empty(g:setswitch_optionset)
 endfunction
 
@@ -143,7 +126,7 @@ augroup setswitch_optionset
   autocmd!
   " Listens for the options in g:setswitch_optionset being explicitly set and caches
   " their values in a dictionary.
-  if s:hasOptionSet()
+  if s:has_option_set()
     execute 'autocmd OptionSet '.join(g:setswitch_optionset, ',')
             \ .' :call <SID>store(expand("<amatch>"), eval("v:option_new"))'
   endif
