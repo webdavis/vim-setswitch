@@ -87,6 +87,15 @@ function! s:focus_insert() abort
   endfor
 endfunction
 
+function! s:merge_terminal() abort
+  if s:filepath() =~? '^term' && has_key(g:setswitch, 'terminal')
+    for l:option in g:setswitch['terminal']
+      let [l:key, l:value] = l:option =~# '^no' ? [s:base_option_name(l:option), 0] : [l:option, 1]
+      call <SID>store(l:key, l:value)
+    endfor
+  endif
+endfunction
+
 augroup setswitch
   autocmd!
   autocmd FileType man,netrw,help call <SID>switch()
@@ -94,6 +103,8 @@ augroup setswitch
   autocmd FocusGained * call eval('mode() ==# "i" ? <SID>focus_insert() : <SID>switch()')
   autocmd WinEnter,BufEnter * call <SID>switch()
   autocmd FocusLost,WinLeave * call <SID>switch(g:setswitch)
+  autocmd TermOpen * call <SID>merge_terminal() | call <SID>switch(g:setswitch)
+  autocmd TermEnter * call <SID>switch(g:setswitch)
 
   " Insert mode is managed independently.
   autocmd InsertEnter * call <SID>switch(g:setswitch_insert)
