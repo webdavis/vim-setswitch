@@ -1,3 +1,4 @@
+" vi:fdm=marker fdl=0 tw=90 sw=2 sts=2 ts=8:
 " Maintainer: Stephen A. Davis <stephen@webdavis.io>
 " License: Unlicense
 " Repository: vim-setswitch
@@ -8,8 +9,14 @@
 " See: https://semver.org/
 let g:setswitch_version = '0.1.0'
 
+function! s:errormsg(text) abort
+  echohl ErrorMsg
+  echom a:text
+  echohl None
+endfunction
+
 if !has('autocmd')
-  echoerr "Could not load ".expand('%:t').": editor has not been compiled with autocmd support."
+  call s:errormsg("Could not load ".expand('%:t').": editor has not been compiled with autocmd support.")
   finish
 endif
 
@@ -34,8 +41,8 @@ function! s:filepath() abort
   return s:fnameescape(fnamemodify(expand('%'), ':p'))
 endfunction
 
-function! s:get_key() abort
-  return has_key(g:setswitch, s:filepath()) ? s:filepath() :
+function! s:get_key(file_check) abort
+  return a:file_check && has_key(g:setswitch, s:filepath()) ? s:filepath() :
           \ has_key(g:setswitch, &filetype) ? &filetype :
           \ has_key(g:setswitch, &buftype) ? &buftype :
           \ has_key(g:setswitch, 'all') ? 'all' : 'BAD_KEY'
@@ -62,15 +69,15 @@ function! s:unset(option) abort
   execute printf("let &l:%s = %s", s:base_option_name(a:option), s:unset_value(s:option_value(s:base_option_name(a:option))))
 endfunction
 
-function! s:switch(...) abort
+function! s:switch(dict, power, file_check) abort
   try
-    if a:0
-      for l:option in a:1[s:get_key()]
-        call s:unset(l:option)
+    if a:power
+      for l:option in a:dict[s:get_key(a:file_check)]
+        call s:set(l:option)
       endfor
     else
-      for l:option in g:setswitch[s:get_key()]
-        call s:set(l:option)
+      for l:option in a:dict[s:get_key(a:file_check)]
+        call s:unset(l:option)
       endfor
     endif
   catch /^Vim\%((\a\+)\)\=:E716/
@@ -78,13 +85,21 @@ function! s:switch(...) abort
 endfunction
 
 function! s:focus_insert() abort
-  call <SID>switch(g:setswitch_insert)
-  let l:list1 = copy(g:setswitch[s:get_key()])
-  let l:list2 = copy(g:setswitch_insert[s:get_key()])
+  call <SID>switch(g:setswitch_insert, 0, 0)
+  if has_key(g:setswitch, s:get_key(1)) && has_key(g:setswitch_insert, s:get_key(0))
+    let l:list1 = copy(g:setswitch[s:get_key(1)])
+    let l:list2 = copy(g:setswitch_insert[s:get_key(0)])
+  else
+    return 0
+  endif
   let l:intersection = filter(l:list1, 'index(l:list2, v:val) == -1')
   for l:option in l:intersection
     call s:set(l:option)
   endfor
+endfunction
+
+function! s:focus_gained() abort
+  call eval('mode() ==# "i" ? <SID>focus_insert() : <SID>switch(g:setswitch, 1, 1)')
 endfunction
 
 function! s:merge_terminal() abort
@@ -96,27 +111,39 @@ function! s:merge_terminal() abort
   endif
 endfunction
 
+function! s:term_open() abort
+  call <SID>merge_terminal()
+  call <SID>switch(g:setswitch, 1, 1)
+endfunction
+
 augroup setswitch
   autocmd!
-  autocmd FileType man,netrw,help call <SID>switch()
-  autocmd WinEnter * autocmd! FileType tagbar call <SID>switch()
-  autocmd FocusGained * call eval('mode() ==# "i" ? <SID>focus_insert() : <SID>switch()')
-  autocmd WinEnter,BufEnter * call <SID>switch()
-  autocmd FocusLost,WinLeave * call <SID>switch(g:setswitch)
-  autocmd TermOpen * call <SID>merge_terminal() | call <SID>switch(g:setswitch)
-  autocmd TermEnter * call <SID>switch(g:setswitch)
+  autocmd FileType man,netrw,help call <SID>switch(g:setswitch, 1, 1)
+  autocmd WinEnter * autocmd! FileType tagbar call <SID>switch(g:setswitch, 1, 1)
+  autocmd FocusGained * call <SID>focus_gained()
+  autocmd WinEnter,BufEnter * call <SID>switch(g:setswitch, 1, 1)
+  autocmd FocusLost,WinLeave * call <SID>switch(g:setswitch, 0, 1)
+
+  " Terminal is not available in this version of vim.
+  if !(has('patch-8.1.1') == 0 && has('nvim-0.3') == 0)
+    autocmd TermOpen * call <SID>term_open()
+    autocmd TermEnter * call <SID>switch(g:setswitch, 0, 1)
+  endif
 
   " Insert mode is managed independently.
-  autocmd InsertEnter * call <SID>switch(g:setswitch_insert)
-  autocmd InsertLeave * call <SID>switch()
+  autocmd InsertEnter * call <SID>switch(g:setswitch_insert, 0, 0)
+  autocmd InsertLeave * call <SID>switch(g:setswitch, 1, 1)
 
   " NERDTree support.
   autocmd User NERDTreeInit,NERDTreeNewRoot
-          \ if exists('b:NERDTree.root.path.str') | call <SID>switch() | endif
+          \ if exists('b:NERDTree.root.path.str') | call <SID>switch(g:setswitch, 1, 1) | endif
 augroup END
 
-function! s:add_filekey_to_setswitch() abort
+function! s:create_filekey_to_setswitch() abort
   call extend(g:setswitch, eval('{s:filepath(): [],}'), 'keep')
+  if empty(g:setswitch[s:filepath()])
+    call extend(g:setswitch[s:filepath()], g:setswitch[s:get_key(0)])
+  endif
 endfunction
 
 function! s:filter_option(key) abort
@@ -135,7 +162,7 @@ function! s:add_filevalue_to_setswitch(key, value) abort
 endfunction
 
 function! s:store(key, value) abort
-  call s:add_filekey_to_setswitch()
+  call s:create_filekey_to_setswitch()
   call s:add_filevalue_to_setswitch(a:key, a:value)
 endfunction
 
@@ -155,6 +182,3 @@ augroup END
 
 let &cpoptions = s:save_cpoptions
 unlet! s:save_cpoptions
-
-
-" vi:fdm=marker fdl=0 tw=90 sw=2 sts=2 ts=8:
